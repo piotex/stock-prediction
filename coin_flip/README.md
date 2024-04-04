@@ -1,6 +1,5 @@
-# stock-prediction
+# Strategy: Coin Flip
 
-Strategy: Coin Flip
 result after: 100x
     max_money: 544.93
     min_money: -411.65
