@@ -7,8 +7,9 @@ download_data = True
 if download_data:
     stock_index = "usdpln"
     stock_index = "eurpln"
-    stock_index = "xtb"
     stock_index = "pkn"
+    stock_index = "xtb"
+    stock_index = "PKNORLEN"
     interval = "d"              # d, w
 
     row_list = get_data_from_stock(stock_index, interval)
@@ -23,9 +24,18 @@ print(stooq_vals[:3])
 
 # plot_chart(stooq_date, stooq_vals)
 # plot_chart_stock_rsi(stooq_date, stooq_vals)
+# plot_chart_stock_rsi_wallet(stooq_date, stooq_vals, 14)
 
 
-period = 14
-plot_chart_stock_rsi_wallet(stooq_date, stooq_vals)
 
+max_wallet_val = 0
+max_wallet_period = 0
+for i in range(1, 30):
+    walet_in_time = get_wallet_values_in_time(stooq_vals, i)
+    if max_wallet_val < walet_in_time[-1]:
+        max_wallet_val = walet_in_time[-1]
+        max_wallet_period = i
+print(f"Max wallet return: {max_wallet_val}")
+print(f"For period: {max_wallet_period}")
 
+plot_chart_stock_rsi_wallet(stooq_date, stooq_vals, max_wallet_period)

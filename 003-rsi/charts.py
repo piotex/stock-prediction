@@ -64,8 +64,7 @@ def plot_chart_stock_rsi(x_val, y_val):
     plt.show()
 
 
-def plot_chart_stock_rsi_wallet(x_val, y_val):
-    period = 14
+def plot_chart_stock_rsi_wallet(x_val, y_val, period):
     major_ticks = np.arange(0, len(x_val) + 1, 100)
     minor_ticks = np.arange(0, len(x_val) + 1, 5)
     major_ticks = np.append(major_ticks, len(x_val)-1)

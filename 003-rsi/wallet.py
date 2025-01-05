@@ -8,6 +8,7 @@ def get_wallet_values_in_time(stooq_vals, period):
     wallet_money = 0
     wallet_shares_count = 0
     single_operation_cost = 1000
+    transaction_cost = 5
 
     for i in range(0, len(stooq_vals)):
         stock_val = stooq_vals[i]
@@ -21,12 +22,16 @@ def get_wallet_values_in_time(stooq_vals, period):
                 if operation_type == "buy":
                     wallet_shares_count += number_of_stocks
                     wallet_money -= number_of_stocks * stock_val
+                    wallet_money -= transaction_cost
 
                 if operation_type == "sell":
+                    if wallet_shares_count == 0:
+                        break
                     if number_of_stocks > wallet_shares_count:  # don't sell shares that doesn't have
                         number_of_stocks = wallet_shares_count
                     wallet_shares_count -= number_of_stocks
                     wallet_money += number_of_stocks * stock_val
+                    wallet_money -= transaction_cost
                 break
         wallet_money_in_time.append(wallet_money + (wallet_shares_count * stooq_vals[i]))
     return wallet_money_in_time
