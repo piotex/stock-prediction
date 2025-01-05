@@ -96,7 +96,7 @@ def plot_chart_stock_rsi_wallet(x_val, y_val, period):
     ax3.grid(which='minor', alpha=0.1)
     ax3.grid(which='major', alpha=0.7)
     ax3.plot(x_val, wallet_in_time, c="green")
-    ax3.axhline(y=0, color='red', linestyle='--')
+    ax3.axhline(y=10000, color='red', linestyle='--')
     ax3.text(x_val[-1], wallet_in_time[-1], round(wallet_in_time[-1], 1), ha='center', va='bottom')
 
     opacity = 0.17

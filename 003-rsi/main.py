@@ -5,11 +5,10 @@ from rsi import calculate_rsi
 download_data = False
 download_data = True
 if download_data:
-    stock_index = "usdpln"
     stock_index = "eurpln"
-    stock_index = "pkn"
+    stock_index = "usdpln"
     stock_index = "xtb"
-    stock_index = "PKNORLEN"
+    stock_index = "pkn"
     interval = "d"              # d, w
 
     row_list = get_data_from_stock(stock_index, interval)
