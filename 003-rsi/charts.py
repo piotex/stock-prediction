@@ -64,7 +64,7 @@ def plot_chart_stock_rsi(x_val, y_val):
     plt.show()
 
 
-def plot_chart_stock_rsi_wallet(x_val, y_val, period):
+def plot_chart_stock_rsi_wallet(x_val, y_val, period, initial_capital=10000, percent_buy=0.1, percent_sell=0.25):
     major_ticks = np.arange(0, len(x_val) + 1, 100)
     minor_ticks = np.arange(0, len(x_val) + 1, 5)
     major_ticks = np.append(major_ticks, len(x_val)-1)
@@ -90,7 +90,7 @@ def plot_chart_stock_rsi_wallet(x_val, y_val, period):
     ax2.axhline(y=low_threshold, color='green', linestyle='--')
     ax2.text(x_val[-1], rsi_values[-1], round(rsi_values[-1], 1), ha='center', va='bottom')
 
-    wallet_in_time = get_wallet_values_in_time(y_val, period)
+    wallet_in_time = get_wallet_values_in_time(y_val, period, initial_capital, percent_buy, percent_sell)
     ax3.set_xticks(major_ticks)
     ax3.set_xticks(minor_ticks, minor=True)
     ax3.grid(which='minor', alpha=0.1)

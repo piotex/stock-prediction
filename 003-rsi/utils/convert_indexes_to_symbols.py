@@ -2,7 +2,7 @@ import requests
 import time
 import random
 
-with open('indexes.txt', 'r') as file:
+with open('../files/indexes.txt', 'r') as file:
     lines = file.readlines()
 
 lines = [line.strip() for line in lines]
@@ -27,7 +27,7 @@ for index in lines:
             if start:
                 res += tmp[i]
         res_idx.append(f"{res}\n")
-        with open('indexes_conv.txt', 'w', encoding='utf-8') as file:
+        with open('../files/indexes_conv.txt', 'w', encoding='utf-8') as file:
             file.writelines(res_idx)
         time.sleep(random.randint(1, 3))
     else:

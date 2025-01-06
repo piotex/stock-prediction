@@ -33,11 +33,11 @@ def get_data_from_stock(stock_index, interval):
 
 
 def save_data_to_json(data):
-    with open('data.json', 'w') as json_file:
+    with open('files/data.json', 'w') as json_file:
         json.dump(data, json_file)
 
 
 def get_data_from_json():
-    with open('data.json', 'r') as json_file:
+    with open('files/data.json', 'r') as json_file:
         data = json.load(json_file)
         return data
