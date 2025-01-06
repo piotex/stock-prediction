@@ -72,6 +72,7 @@ def plot_chart_stock_rsi_wallet(x_val, y_val, period, initial_capital=10000, per
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(30, 15), height_ratios=[2, 1, 1])
     plt.grid(True)
 
+    ax1.set_title("Cena akcji w czasie", fontsize=15)
     ax1.set_xticks(major_ticks)
     ax1.set_xticks(minor_ticks, minor=True)
     ax1.grid(which='minor', alpha=0.1)
@@ -81,6 +82,7 @@ def plot_chart_stock_rsi_wallet(x_val, y_val, period, initial_capital=10000, per
 
     rsi_values = calculate_rsi(y_val, period)
     rsi_operations = get_rsi_operations(y_val, period)
+    ax2.set_title("RSI", fontsize=15)
     ax2.set_xticks(major_ticks)
     ax2.set_xticks(minor_ticks, minor=True)
     ax2.grid(which='minor', alpha=0.1)
@@ -91,6 +93,7 @@ def plot_chart_stock_rsi_wallet(x_val, y_val, period, initial_capital=10000, per
     ax2.text(x_val[-1], rsi_values[-1], round(rsi_values[-1], 1), ha='center', va='bottom')
 
     wallet_in_time = get_wallet_values_in_time(y_val, period, initial_capital, percent_buy, percent_sell)
+    ax3.set_title("Wartość portfela w czasie", fontsize=15)
     ax3.set_xticks(major_ticks)
     ax3.set_xticks(minor_ticks, minor=True)
     ax3.grid(which='minor', alpha=0.1)
