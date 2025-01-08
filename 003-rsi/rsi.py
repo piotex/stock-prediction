@@ -21,9 +21,9 @@ def calculate_rsi(stooq_vals, period=14):
     return rsi.tolist()
 
 
-def get_rsi_operations(stooq_vals, period):
+def get_rsi_operations(stooq_vals, period):     # start, end, operation -> "buy" "sell"
     rsi_values = calculate_rsi(stooq_vals, period)
-    operations = []  # start, end, operation -> "buy" "sell"
+    operations = []
     start_sell_i = -1
     start_buy_i = -1
     for i in range(0, len(rsi_values)):
@@ -40,3 +40,16 @@ def get_rsi_operations(stooq_vals, period):
             operations.append([start_buy_i, i, "buy"])
             start_buy_i = -1
     return operations
+
+
+def get_rsi_histogram_operations(stooq_vals):   # +1 buy | -1 sell
+    histogram = [0 for x in stooq_vals]
+    for period in range(3,32):
+        rsi_values = calculate_rsi(stooq_vals, period)
+        for i, rsi in enumerate(rsi_values):
+            if rsi > high_threshold:
+                histogram[i] += -1
+            if rsi < low_threshold:
+                histogram[i] += 1
+    return histogram
+
