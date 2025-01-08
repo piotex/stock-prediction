@@ -236,7 +236,13 @@ def plot_chart_stock_rsi_histogram_wallet(x_val, y_val):
     ax1.grid(which='minor', alpha=0.1)
     ax1.grid(which='major', alpha=0.7)
     ax1.plot(x_val, y_val, c="b")
-    ax1.text(x_val[-1], y_val[-1], str(y_val[-1]), ha='center', va='bottom', fontsize=10)
+    ax1.text(x_val[-1], y_val[-1], str(y_val[-1]),
+        ha='center',
+        va='bottom',
+        fontsize=11,
+        color='white',
+        bbox=dict(facecolor=(0, 0, 0, 0.5), edgecolor='none', boxstyle='round,pad=0.15')
+    )
 
     for period in range(3,32):
         rsi_values = calculate_rsi(y_val, period)
