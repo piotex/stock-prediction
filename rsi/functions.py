@@ -1,3 +1,14 @@
+import os
+import datetime
+import time
+import random
+import requests
+
+from rsi.simulate_strategy import simulate_strategy
+from values import *
+from typing import Dict, List
+
+
 def url_generator(stock_index: str, interval: str, yyyy_mm_dd: str) -> str:
   return f"https://stooq.pl/q/a2/d/?s={stock_index}&i={interval}&f={yyyy_mm_dd}"
 
@@ -8,3 +19,81 @@ def parse_stock_data(txt_data: str) -> list:
         a = x.split(',')
         ret.append({"Date":a[0], "Time":a[1], "Open":float(a[2]), "High":float(a[3]), "Low":float(a[4]), "Close":float(a[5])})
     return ret
+
+def get_indexes_files():
+    res = []
+    dir_name = "indeksy"
+    files = [f"{dir_name}/{x}" for x in os.listdir(dir_name)]
+    # files = [f"{dir_name}/wig20.txt"]
+
+    for file in files:
+        with open(file) as f:
+            data = f.readlines()
+            res += [x.strip() for x in data]
+    return res
+
+def download_stock_data():
+    now = datetime.datetime.now()
+    yyyy_mm_dd = f"{now.year:04d}{now.month:02d}{now.day:02d}"
+
+    for f in os.listdir("stocks"):
+        os.remove("stocks/" + f)
+
+    indexes = get_indexes_files()
+    for i, index in enumerate(indexes):
+        url = url_generator(index, interval, yyyy_mm_dd)
+        time.sleep(random.uniform(1, 2))
+        resp = requests.get(url)
+        with open(f"stocks/{index}.txt", "w", newline="", encoding="utf-8") as f:
+            f.writelines(resp.text)
+        print(f"Downloaded {i+1} of {len(indexes)}")
+
+def get_stocks() -> Dict[str, Dict]:
+    dir_name = "stocks"
+    stocks = {}
+    stocks_files = [f"{dir_name}/{x}" for x in os.listdir(dir_name)]
+    for stocks_file in stocks_files:
+        with open(stocks_file, "r", newline="", encoding="utf-8") as f:
+            try:
+                stock_idx = stocks_file.split("/")[-1].split(".")[0]
+                stocks[stock_idx] = parse_stock_data(f.read())
+            except Exception as e:
+                print(e)
+                print(stocks_file)
+                continue
+    return stocks
+
+def write_table(f, title, rows):
+    f.write(title + "\n")
+    f.write(f"{'Index':<10} {'End Value':>15} {'Min':>15} {'Max':>15}\n")
+    f.write("-" * 60 + "\n")
+
+    for stock, stock_data, portfolio_values in rows:
+        end_val = portfolio_values[-1]
+        min_val = min(portfolio_values)
+        max_val = max(portfolio_values)
+
+        end_str = f"{end_val:,.2f}".replace(",", " ")
+        min_str = f"{min_val:,.2f}".replace(",", " ")
+        max_str = f"{max_val:,.2f}".replace(",", " ")
+
+        f.write(
+            f"{stock:<10} {end_str:>15} {min_str:>15} {max_str:>15}\n"
+        )
+    f.write("\n\n")
+
+
+
+def save_stock_profit_list(stock_profit_list):
+    by_end = sorted(stock_profit_list, key=lambda x: x[2][-1], reverse=True)  # po End Value
+    by_min = sorted(stock_profit_list, key=lambda x: min(x[2]), reverse=True)  # po Min
+    by_max = sorted(stock_profit_list, key=lambda x: max(x[2]), reverse=True)  # po Max
+
+    by_end = by_end[:rows_to_show_in_wyniki]
+    by_min = by_min[:rows_to_show_in_wyniki]
+    by_max = by_max[:rows_to_show_in_wyniki]
+
+    with open("wyniki.txt", "w", encoding="utf-8") as f:
+        write_table(f, "==== Posortowane po: End Value ====", by_end)
+        write_table(f, "==== Posortowane po: Max ====", by_max)
+        write_table(f, "==== Posortowane po: Min ====", by_min)

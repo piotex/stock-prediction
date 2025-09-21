@@ -55,7 +55,8 @@ def print_portfel_vals(dates, portfolio_values, ax3):
     ax3.grid(True)
     ax3.legend()
 
-    ax3.axhline(y=initial_cash+initial_stock_value, color='red', linestyle='--', alpha=0.8, label='Poziom 20k PLN')
+    # ax3.axhline(y=initial_cash+initial_stock_value, color='red', linestyle='--', alpha=0.8, label='Poziom 20k PLN')
+    ax3.axhline(y=0, color='red', linestyle='--', alpha=0.8, label='Poziom 20k PLN')
     ax3.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x):,}".replace(",", ".")))
     ax3.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 
@@ -91,7 +92,7 @@ def calc_buy_sell(rsi_vals):
     return buy_vals, sell_vals
 
 def plot_charts_rsi_trend_br(stock_name, date_vals, vals_list, portfolio_values, trend_text):
-    rsi_vals = calculate_rsi(vals_list, period=14)
+    rsi_vals = calculate_rsi(vals_list, period=rsi_period)
     buy_vals, sell_vals = calc_buy_sell(rsi_vals)
     dates = [datetime.datetime.strptime(d, "%Y%m%d") for d in date_vals]
 
@@ -126,7 +127,7 @@ def plot_charts_rsi_trend_br(stock_name, date_vals, vals_list, portfolio_values,
 
 
 def plot_charts_rsi(stock_name, date_vals, vals_list, portfolio_values):
-    rsi_vals = calculate_rsi(vals_list, period=14)
+    rsi_vals = calculate_rsi(vals_list, period=rsi_period)
 
     buy_vals = []
     sell_vals = []

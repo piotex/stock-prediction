@@ -1,10 +1,26 @@
-initial_cash = 1_000_000_000
-initial_stock_value = 1_000_000_000
-buy_amount_pln = 1500
-sell_amount_pln = 1500
+
+
+
+
+
+
+
+
 
 read_from_stooq = False
-rsi_critical_period = 7
-dir_name = "indeksy"
+show_all_charts_not_only_selected_by_rsi = False
+rows_to_show_in_wyniki = 12
+
+initial_cash = 1_000_000_000
+initial_stock_value = 0
+buy_amount_pln = 1500
+sell_amount_pln = buy_amount_pln
 
 dates_to_parse = -360
+loss_that_is_ok = (-1*dates_to_parse) * buy_amount_pln * 0.01 * (-1)
+gain_that_must_be = (-1*dates_to_parse) * buy_amount_pln * 0.01
+
+rsi_period = 14
+rsi_critical_period = 5
+interval = "d"  # "240"=4h     "d"
+

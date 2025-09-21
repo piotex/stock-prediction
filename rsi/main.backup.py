@@ -35,7 +35,7 @@ else:
 
 vals_list = [x["Close"] for x in row_list]
 date_vals = [x["Date"] for x in row_list]
-rsi_vals = calculate_rsi(vals_list, period=14)
+rsi_vals = calculate_rsi(vals_list, period=rsi_period)
 
 buy_threshold = 30
 sell_threshold = 70
