@@ -8,6 +8,19 @@
 
 
 read_from_stooq = False
+read_from_bizradar_and_bankier = False
+print_results = True
+
+clean_all_folders = False
+
+print_stock_prices = True
+print_tendencies_reports = False
+print_quarterly_reports = True
+
+
+
+
+
 show_all_charts_not_only_selected_by_rsi = False
 rows_to_show_in_wyniki = 12
 

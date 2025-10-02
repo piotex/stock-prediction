@@ -4,7 +4,6 @@ import time
 from charts import *
 from data import *
 from rsi import calculate_rsi
-from tabulate import tabulate
 
 from wallet import get_wallet_values_from_histogram_in_time
 

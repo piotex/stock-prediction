@@ -1,69 +1,87 @@
 import os
-from calculate_rsi import calculate_rsi
-from functions import parse_stock_data
-from plot_charts import plot_charts_rsi_trend_br
-from rsi.functions import download_stock_data, get_stocks, write_table, save_stock_profit_list
-from rsi.get_stock_profit_list import get_stock_profit_list
+import sys
+import time
+from rsi.download_data import download_stock_data, get_stock_name_and_tendences, get_Skonsolidowany_quarterly_reports, \
+    get_Jednostkowy_quarterly_reports
+from rsi.functions import get_stock_data
+from rsi.plot_charts import print_stock_data
 from values import *
-from simulate_strategy import simulate_strategy
-import requests
-from lxml import html
+import random
+import json
+from datetime import datetime
+import traceback
 
+
+if clean_all_folders:
+    for file in os.listdir("stocks"):
+        os.remove(f"stocks/{file}")
+    for file in os.listdir("wyniki"):
+        os.remove(f"wyniki/{file}")
 
 
 # ================================== GET DATA ===============================================
 if read_from_stooq:
     download_stock_data()
-stocks = get_stocks()
-
-# ================================== CALCULATE END PROFIT ===============================================
-stock_profit_list = get_stock_profit_list(stocks)
-save_stock_profit_list(stock_profit_list)
+stock_idx_list = [x.split('.')[0] for x in os.listdir("stocks")]
+stock_idx_list.sort()
 
 
 
-# ================================== FIND POTENTIAL ===============================================
-
-stock_profit_list = sorted(stock_profit_list, key=lambda x: x[2][-1], reverse=True)  # po End Value
-for x in range(len(stock_profit_list)):
+for i, stock_idx in enumerate(stock_idx_list):
     try:
-        stock_profit = stock_profit_list[x]
-        index_name = stock_profit[0]
-        row_list = stock_profit[1]
-        portfolio_values = stock_profit[2]
-        row_list = row_list[dates_to_parse:]
+        if read_from_bizradar_and_bankier:
+            if os.path.exists(f"wyniki/{stock_idx}.txt"):
+                os.remove(f"wyniki/{stock_idx}.txt")
 
-        vals_list = [x["Close"] for x in row_list]
-        date_vals = [x["Date"] for x in row_list]
+            print(f" {i+1} / {len(stock_idx_list)}  -  {stock_idx}")
+            stock_data = get_stock_data(stock_idx)          # {index, Date, Time, Open, High, Low, Close}
+            stock_name, tendencies = get_stock_name_and_tendences(stock_data["index"])
 
-        rsi_vals = calculate_rsi(vals_list, period=rsi_period)
-        rsi_vals_last = rsi_vals[-rsi_critical_period:]
-        if min(rsi_vals_last) < 30 or max(rsi_vals_last) > 70 or show_all_charts_not_only_selected_by_rsi:
-            portfolio_values = simulate_strategy(vals_list, initial_cash, initial_stock_value, buy_amount_pln, sell_amount_pln)
-            portfolio_values = [x - initial_cash for x in portfolio_values]
+            quarterly_reports = {}
+            try:
+                quarterly_reports = get_Skonsolidowany_quarterly_reports(stock_name)
+            except:
+                quarterly_reports['Quarters'] = [""]
+            if "202" not in quarterly_reports['Quarters'][-1]:
+                quarterly_reports = get_Jednostkowy_quarterly_reports(stock_name)
 
-            url = f"https://www.biznesradar.pl/raporty-finansowe-rachunek-zyskow-i-strat/{index_name}"
-            headers = { "User-Agent": "Mozilla/5.0" }
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            tree = html.fromstring(response.text)
-            xpath = '/html/body/div[2]/div[2]/div[1]/div/main/div/div/div[4]/div[3]'
-            section = tree.xpath(xpath)
-            plain_text = ""
-            if section:
-                html_section = html.tostring(section[0], encoding='unicode')
-                tree = html.fromstring(html_section)
-                plain_text = tree.text_content().strip()
-                plain_text = plain_text.encode('ascii', 'ignore').decode('ascii')
-                plain_text = plain_text.replace("\t", "").replace("\r", " ").replace("\n", "").replace("r/r", "\n")
-                plain_text = plain_text.replace("POZYTYWNE", "POZYTYWNE\n").replace("NEGATYWNE", "NEGATYWNE\n")
 
-            plot_charts_rsi_trend_br(index_name, date_vals, vals_list, portfolio_values, plain_text)
+
+            zysk_netto = quarterly_reports['Zysk (strata) netto (tys.)*']
+            if not zysk_netto[-1] > zysk_netto[-2]:
+                continue
+            if not "EBITDA (tys.)" in quarterly_reports:
+                ebitda = quarterly_reports['EBITDA (tys.)']
+                if not ebitda[-1] > ebitda[-2]:
+                    continue
+            if not "Przychody netto ze sprzedaży (tys.)" in quarterly_reports:
+                przychod_netto = quarterly_reports['Przychody netto ze sprzedaży (tys.)']
+                if not przychod_netto[-1] > przychod_netto[-2]:
+                    continue
+
+            time.sleep(random.randint(1, 2))
+            with open(f"wyniki/{stock_idx}.txt", "w") as file:
+                file.write(stock_name)
+
     except Exception as e:
+        print(f"=========================== ERROR dla: {stock_idx}")
+        traceback.print_exc(file=sys.stdout)
         print(e)
-        print(index_name)
         continue
 
-    a = 0
 
+if print_results:
+    list_to_process = os.listdir("wyniki")
+    for i, file in enumerate(list_to_process):
+        stock_data = get_stock_data(file.split('.')[0])         # {index, Date, Time, Open, High, Low, Close}
+        stock_name, tendencies = get_stock_name_and_tendences(stock_data["index"])
+
+        quarterly_reports = get_Skonsolidowany_quarterly_reports(stock_name)
+        if "202" not in quarterly_reports['Quarters']:
+            quarterly_reports = get_Jednostkowy_quarterly_reports(stock_name)
+
+        print(f" {i + 1} / {len(list_to_process)}  -  {stock_name}")
+        print_stock_data(stock_name, stock_data["Date"], stock_data["Close"], tendencies, quarterly_reports)
+
+        os.remove(f"wyniki/{file}")
 

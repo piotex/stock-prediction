@@ -1,16 +1,39 @@
 import os
-import datetime
+from datetime import datetime, date
 import time
 import random
 import requests
-
+from typing import Dict, List
 from rsi.simulate_strategy import simulate_strategy
 from values import *
-from typing import Dict, List
 
 
 def url_generator(stock_index: str, interval: str, yyyy_mm_dd: str) -> str:
   return f"https://stooq.pl/q/a2/d/?s={stock_index}&i={interval}&f={yyyy_mm_dd}"
+
+def get_stock_data(stock_index: str):
+    with open(f"stocks/{stock_index}.txt") as f:
+        tmp = parse_stock_data(f.read())
+        stock = {
+            "index": stock_index,
+            "Date": [datetime.strptime(x["Date"], '%Y%m%d').date() for x in tmp],
+            "Time": [x["Time"] for x in tmp],
+            "Open": [x["Open"] for x in tmp],
+            "High": [x["High"] for x in tmp],
+            "Low": [x["Low"] for x in tmp],
+            "Close": [x["Close"] for x in tmp],
+        }
+        return stock
+
+
+
+
+
+
+
+
+
+
 
 def parse_stock_data(txt_data: str) -> list:
     lista = txt_data.split()
@@ -32,21 +55,6 @@ def get_indexes_files():
             res += [x.strip() for x in data]
     return res
 
-def download_stock_data():
-    now = datetime.datetime.now()
-    yyyy_mm_dd = f"{now.year:04d}{now.month:02d}{now.day:02d}"
-
-    for f in os.listdir("stocks"):
-        os.remove("stocks/" + f)
-
-    indexes = get_indexes_files()
-    for i, index in enumerate(indexes):
-        url = url_generator(index, interval, yyyy_mm_dd)
-        time.sleep(random.uniform(1, 2))
-        resp = requests.get(url)
-        with open(f"stocks/{index}.txt", "w", newline="", encoding="utf-8") as f:
-            f.writelines(resp.text)
-        print(f"Downloaded {i+1} of {len(indexes)}")
 
 def get_stocks() -> Dict[str, Dict]:
     dir_name = "stocks"
@@ -54,14 +62,10 @@ def get_stocks() -> Dict[str, Dict]:
     stocks_files = [f"{dir_name}/{x}" for x in os.listdir(dir_name)]
     for stocks_file in stocks_files:
         with open(stocks_file, "r", newline="", encoding="utf-8") as f:
-            try:
-                stock_idx = stocks_file.split("/")[-1].split(".")[0]
-                stocks[stock_idx] = parse_stock_data(f.read())
-            except Exception as e:
-                print(e)
-                print(stocks_file)
-                continue
+            stock_idx = stocks_file.split("/")[-1].split(".")[0]
+            stocks[stock_idx] = parse_stock_data(f.read())
     return stocks
+
 
 def write_table(f, title, rows):
     f.write(title + "\n")
