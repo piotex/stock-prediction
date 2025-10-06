@@ -12,7 +12,7 @@ clean_all_folders = False
 # === DOWNLOAD DATA ======================================
 download_from_stooq = False
 download_from_bizradar_tendencies = False
-download_from_bankier_financial_data = True
+download_from_bankier_financial_data = False
 print_results = True
 
 

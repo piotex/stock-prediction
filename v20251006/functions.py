@@ -5,12 +5,15 @@ import random
 import requests
 from typing import Dict, List
 from values import *
-
+import time
+import math
+from typing import Callable, Any
 
 
 
 def get_stock_data(stock_index: str):
-    with open(f"stocks/{stock_index}.txt") as f:
+    indexes_dir = "00-stooq-stocks-values"
+    with open(f"{indexes_dir}/{stock_index}.txt") as f:
         tmp = parse_stock_data(f.read())
         stock = {
             "index": stock_index,
@@ -24,9 +27,17 @@ def get_stock_data(stock_index: str):
         return stock
 
 
+def measure_execution_time(func: Callable[..., Any], function_name: str) -> None:
+    start_time = time.time()
+    func()
+    end_time = time.time()
 
-
-
+    duration_seconds = end_time - start_time
+    duration_minutes = duration_seconds / 60
+    print("-" * 50)
+    print(f"✅ FUNKCJA '{function_name}' ZAKOŃCZONA.")
+    print(f"⏱️ CZAS REALIZACJI: {duration_minutes:.2f} min ({duration_seconds:.0f} s)")
+    print("-" * 50)
 
 
 
