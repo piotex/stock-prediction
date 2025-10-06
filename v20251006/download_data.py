@@ -1,6 +1,5 @@
 from typing import Dict, List, Tuple, Any
 import os
-from rsi.functions import parse_stock_data
 import datetime
 import time
 import random
@@ -11,36 +10,34 @@ import pandas as pd
 import io
 import re
 from io import StringIO
+import json
 
-
+# =================================================================================================
 def download_stock_data():
-    for f in os.listdir("stocks"):
-        os.remove("stocks/" + f)
+    stooq_dir = "00-stooq-stocks-values"
+    for f in os.listdir(stooq_dir):
+        os.remove(os.path.join(stooq_dir, f))
 
-    indexes = []
-    indexes_files = [f"indeksy/{x}" for x in os.listdir("indeksy")]
-    for file in indexes_files:
-        with open(file) as f:
-            data = f.readlines()
-            indexes += [x.strip() for x in data]
+    indexes_dir = "indeksy"
+    indexes_files = [f"{os.path.join(indexes_dir, x)}" for x in os.listdir(indexes_dir)]
+    indexes = [
+        x.strip()
+        for file in indexes_files
+        for x in open(file).readlines()
+    ]
 
-    now = datetime.datetime.now()
-    yyyy_mm_dd = f"{now.year:04d}{now.month:02d}{now.day:02d}"
+    yyyy_mm_dd = f"{datetime.datetime.now().year:04d}{datetime.datetime.now().month:02d}{datetime.datetime.now().day:02d}"
     for i, index in enumerate(indexes):
         time.sleep(random.uniform(1, 2))
-        url = f"https://stooq.pl/q/a2/d/?s={index}&i={interval}&f={yyyy_mm_dd}"
-        resp = requests.get(url)
-        with open(f"stocks/{index}.txt", "w", newline="", encoding="utf-8") as f:
+        resp = requests.get(f"https://stooq.pl/q/a2/d/?s={index}&i={interval}&f={yyyy_mm_dd}")
+        with open(f"{stooq_dir}/{index}.txt", "w", newline="", encoding="utf-8") as f:
             f.writelines(resp.text)
-        print(f"Downloaded {i+1} of {len(indexes)}")
+        print(f"Downloaded: {index}   ||   {i+1}/{len(indexes)}")
 
 
 
-
-
-
-
-def get_stock_name_and_tendences(index_name) -> Tuple[str, str]:
+# =================================================================================================
+def _get_stock_name_and_tendences(index_name) -> Tuple[str, str]:
     url = f"https://www.biznesradar.pl/raporty-finansowe-rachunek-zyskow-i-strat/{index_name}"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
     response = requests.get(url, headers=headers)
@@ -70,6 +67,35 @@ def get_stock_name_and_tendences(index_name) -> Tuple[str, str]:
             stock_name = index_name
 
     return stock_name, tendencies
+
+def download_bizradar_tendencies():
+    stooq_dir = "01-biznesradar-tendencies"
+    for f in os.listdir(stooq_dir):
+        os.remove(os.path.join(stooq_dir, f))
+
+    indexes_dir = "00-stooq-stocks-values"
+    indexes = [f"{x.split('.')[0]}" for x in os.listdir(indexes_dir)]
+
+    for i, index in enumerate(indexes):
+        time.sleep(random.uniform(1, 2))
+        stock_name, tendencies = _get_stock_name_and_tendences(index)
+        with open(f"{stooq_dir}/{index}.json", "w", newline="", encoding="utf-8") as file:
+            data_obj = {
+                "stock_index": index,
+                "stock_name": stock_name,
+                "tendencies": tendencies,
+            }
+            json.dump(data_obj, file, indent=4, ensure_ascii=False)
+        print(f"Downloaded: {index}   ||   {i+1}/{len(indexes)}")
+
+
+
+
+# =================================================================================================
+def download_bankier_financial_data():
+    pass
+
+
 
 
 def _parse_financial_table(response_text: str) -> dict[str, List[str]]:

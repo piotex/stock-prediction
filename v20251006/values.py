@@ -6,14 +6,15 @@
 
 
 
+# === CLEAN ======================================
+clean_all_folders = False
 
-read_from_stooq = False
-read_from_bizradar_tendencies = True
-
-read_from_bizradar_and_bankier = False
+# === DOWNLOAD DATA ======================================
+download_from_stooq = False
+download_from_bizradar_tendencies = False
+download_from_bankier_financial_data = True
 print_results = True
 
-clean_all_folders = False
 
 print_stock_prices = True
 print_tendencies_reports = False

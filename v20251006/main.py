@@ -1,10 +1,7 @@
 import os
 import sys
 import time
-from rsi.download_data import download_stock_data, get_stock_name_and_tendences, get_Skonsolidowany_quarterly_reports, \
-    get_Jednostkowy_quarterly_reports
-from rsi.functions import get_stock_data
-from rsi.plot_charts import print_stock_data
+from v20251006.download_data import download_stock_data, download_bizradar_tendencies
 from values import *
 import random
 import json
@@ -19,18 +16,38 @@ if clean_all_folders:
         "02-bankier-financial-data",
     ]
     for folder in folders_to_clean:
-        for file in os.listdir(folder):
-            os.remove(os.path.join(folder, file))
-        os.rmdir(folder)
+        if os.path.exists(folder):
+            for file in os.listdir(folder):
+                os.remove(os.path.join(folder, file))
+            os.rmdir(folder)
         os.makedirs(folder, exist_ok=True)
 
 
 # ================================== GET DATA ===============================================
-if read_from_stooq:
+if download_from_stooq:
     download_stock_data()
 
-if read_from_bizradar_tendencies:
-    pass
+if download_from_bizradar_tendencies:
+    download_bizradar_tendencies()
+
+if download_from_bankier_financial_data:
+    download_bankier_financial_data()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 stock_idx_list = sorted([x.split('.')[0] for x in os.listdir("stocks")])

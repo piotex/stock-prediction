@@ -4,7 +4,6 @@ import time
 import random
 import requests
 from typing import Dict, List
-from rsi.simulate_strategy import simulate_strategy
 from values import *
 
 
