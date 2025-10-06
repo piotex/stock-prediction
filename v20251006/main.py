@@ -18,10 +18,11 @@ if clean_all_folders:
         "01-biznesradar-tendencies",
         "02-bankier-financial-data",
     ]
-    for file in os.listdir("stocks"):
-        os.remove(f"stocks/{file}")
-    for file in os.listdir("wyniki"):
-        os.remove(f"wyniki/{file}")
+    for folder in folders_to_clean:
+        for file in os.listdir(folder):
+            os.remove(os.path.join(folder, file))
+        os.rmdir(folder)
+        os.makedirs(folder, exist_ok=True)
 
 
 # ================================== GET DATA ===============================================
@@ -29,7 +30,7 @@ if read_from_stooq:
     download_stock_data()
 
 if read_from_bizradar_tendencies:
-
+    pass
 
 
 stock_idx_list = sorted([x.split('.')[0] for x in os.listdir("stocks")])
