@@ -5,7 +5,7 @@ import time
 import random
 import requests
 from values import *
-from lxml import html
+from lxml import html, etree
 import pandas as pd
 import io
 import re
@@ -92,6 +92,96 @@ def download_bizradar_tendencies():
         except Exception as e:
             print(f"Error: {index}   ||   {i+1}/{len(indexes)} - {e}")
 
+
+# =================================================================================================
+def _get_quarters(html_content):
+    parser = etree.HTMLParser()
+    tree = etree.parse(io.StringIO(html_content), parser)
+    header_elements = tree.xpath('//table//th')
+    quarters = []
+    for th in header_elements:
+        header_text = th.xpath('string(.)').strip().split('\n')[0].strip()
+        if header_text != '':
+            quarters.append(header_text)
+    return quarters
+
+def _get_headers(html_content):
+    tree = etree.HTML(html_content)
+    full_table_element = tree.xpath('//table')[0]
+    row_label_elements = full_table_element.xpath('.//tr/td[@class="f"]')
+    headers = []
+    for td_element in row_label_elements:
+        full_text = td_element.xpath('string(.)')
+        if full_text:
+            cleaned_key = re.sub(r'\s+', ' ', full_text.strip()).strip()
+            headers.append(cleaned_key)
+    return headers
+
+def _get_row_elements(html_content):
+    tree = etree.HTML(html_content)
+    full_table_element = tree.xpath('//table')[0]
+    row_label_elements = full_table_element.xpath('.//tr/td')
+    row_elements = []
+    for td_element in row_label_elements:
+        full_text = td_element.xpath('string(.)')
+        if full_text:
+            cleaned_key = re.sub(r'\s+', ' ', full_text.strip()).strip()
+            row_elements.append(cleaned_key)
+    return row_elements
+
+def _join_dict(quarters, headers, row_elems):
+    i = 0
+    result = {"Quarters": quarters}
+    while i < len(row_elems):
+        if row_elems[i] in headers:
+            key = row_elems[i]
+            result[key] = []
+            i += 1
+            while i < len(row_elems) and row_elems[i] not in headers:
+                result[key].append(row_elems[i])
+                i += 1
+
+    result = {key:value[-8:] for key, value in result.items()}
+
+    max_len = -1
+    for key in result:
+        max_len = max(max_len, len(result[key]))
+    for key in result:
+        if len(result[key]) < max_len:
+            result[key] = ["-"] * max_len
+    return result
+
+def _get_indicators(index_name):
+    url = f"https://www.biznesradar.pl/wskazniki-wartosci-rynkowej/{index_name}"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+    response = requests.get(url, headers=headers)
+    full_tree = html.fromstring(response.text)
+
+    xpath_tendency = '/html/body/div[2]/div[2]/div[1]/div/main/div/div/div[4]/table'
+    section_tendency = full_tree.xpath(xpath_tendency)
+    if section_tendency:
+        html_content = etree.tostring(section_tendency[0], encoding='unicode')
+        quarters = _get_quarters(html_content)
+        headers = _get_headers(html_content)
+        row_elems = _get_row_elements(html_content)
+        return _join_dict(quarters, headers, row_elems)
+
+def download_bizradar_indicators():
+    stooq_dir = "01-biznesradar-indicators"
+    for f in os.listdir(stooq_dir):
+        os.remove(os.path.join(stooq_dir, f))
+
+    indexes_dir = "00-stooq-stocks-values"
+    indexes = [f"{x.split('.')[0]}" for x in os.listdir(indexes_dir)]
+    for i, index in enumerate(indexes):
+        try:
+            time.sleep(random.uniform(1, 2))
+            indicators = _get_indicators(index)
+            with open(f"{stooq_dir}/{index}.json", "w", newline="", encoding="utf-8") as file:
+                json.dump(indicators, file, indent=4, ensure_ascii=False)
+            print(f"Downloaded: {index}   ||   {i + 1}/{len(indexes)}")
+        except Exception as e:
+            print(f"Error: {index}   ||   {i + 1}/{len(indexes)} - {e}")
 
 
 # =================================================================================================

@@ -32,6 +32,63 @@ def print_tendencies_reports(tendencies, stock_name, ax4):
     ax4.axis('off')
 
 
+def print_indicators_chart(financial_data, stock_name, ax1):
+    categories = list(financial_data.keys())
+    values = list(financial_data.values())
+    data = []
+    for i in range(len(categories)):
+        # tmp = [x.replace('~', '\n') for x in values[i]]
+        tmp = [x.split('~')[0].split("r/r")[0] for x in values[i]]
+        data.append([categories[i]] + tmp)
+
+    num_rows = len(data)
+    num_cols = len(data[0])
+
+    # 2. Utworzenie tabeli i podstawowe ustawienia
+    table = ax1.table(cellText=data,
+                      loc='center',
+                      cellLoc='center')
+    ax1.axis('off')
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    light_gray = '#f0f0f0'
+    colors = [
+        "#DCDCDC",
+        "#D3D3D3",
+        "#C0C0C0",
+        "#A9A9A9",
+        "#808080",
+        "#696969",
+        "#778899",
+        "#708090",
+        "#2F4F4F"
+    ]
+
+    num_data_cols = num_cols - 1
+    category_width_ratio = 0.25
+    data_width_ratio = (1.0 - category_width_ratio) / num_data_cols
+
+    for i in range(num_rows):  # i to indeks wiersza w tabeli
+        if i >= 1 and i % 2 == 0:
+            for j in range(num_cols):
+                cell = table[(i, j)]
+                color_idx = ((i // 2) - 1) % len(colors)
+                cell.set_facecolor(colors[color_idx])
+
+        for j in range(num_cols):
+            cell = table[(i, j)]
+            if i == 0:
+                cell.set_text_props(fontweight='bold')
+                cell.set_facecolor('#cccccc')
+            if j == 0:
+                cell.set_width(category_width_ratio)
+                cell.set_text_props(fontweight='bold')
+            else:
+                cell.set_width(data_width_ratio)
+
+
+
+
 def print_reports_chart(financial_data, stock_name, ax1):
     categories = list(financial_data.keys())
     values = list(financial_data.values())
@@ -129,13 +186,14 @@ def print_stock_data(stock_name: str,
                      dates: List[datetime.date],
                      prices: List[float],
                      tendencies: str,
+                     indicators: Dict[str, List[Any]],
                      quarterly_data: Dict[str, List[Any]],
                      ):
 
     fig, ax_list = plt.subplots(
-        3, 1,
+        4, 1,
         figsize=(25, 16),
-        gridspec_kw={'height_ratios': [2, 1, 1]}
+        gridspec_kw={'height_ratios': [2, 1, 1, 1]}
     )
 
     if print_stock_prices:
@@ -147,8 +205,11 @@ def print_stock_data(stock_name: str,
     if print_tendencies_reports:
         print_tendencies_reports(tendencies, stock_name, ax_list[1])
 
+    if print_indicators:
+        print_indicators_chart(indicators, stock_name, ax_list[2])
+
     if print_quarterly_reports:
-        print_reports_chart(quarterly_data, stock_name, ax_list[2])
+        print_reports_chart(quarterly_data, stock_name, ax_list[3])
 
     # fig.autofmt_xdate()
     plt.tight_layout(pad=2.0)
@@ -251,27 +312,27 @@ def calc_buy_sell(rsi_vals):
             sell_vals.append(0)
     return buy_vals, sell_vals
 
-def plot_charts_rsi_trend_br(stock_name, date_vals, vals_list, portfolio_values, trend_text):
-    rsi_vals = calculate_rsi(vals_list, period=rsi_period)
-    buy_vals, sell_vals = calc_buy_sell(rsi_vals)
-    dates = [datetime.datetime.strptime(d, "%Y%m%d") for d in date_vals]
-
-    # dates = date_vals
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(
-        4, 1,
-        figsize=(20, 16),
-        gridspec_kw={'height_ratios': [2, 1, 1, 1]}
-    )
-
-    print_prices(dates, vals_list, stock_name, buy_vals, sell_vals, ax1)
-    print_tendencje(trend_text, ax2)
-    print_rsi(dates, rsi_vals, buy_vals, sell_vals, ax3)
-    print_portfel_vals(dates, portfolio_values, ax4)
-
-
-    plt.tight_layout()
-    plt.tight_layout(pad=2.0)
-    plt.show()
+# def plot_charts_rsi_trend_br(stock_name, date_vals, vals_list, portfolio_values, trend_text):
+#     rsi_vals = calculate_rsi(vals_list, period=rsi_period)
+#     buy_vals, sell_vals = calc_buy_sell(rsi_vals)
+#     dates = [datetime.datetime.strptime(d, "%Y%m%d") for d in date_vals]
+#
+#     # dates = date_vals
+#     fig, (ax1, ax2, ax3, ax4) = plt.subplots(
+#         4, 1,
+#         figsize=(20, 16),
+#         gridspec_kw={'height_ratios': [2, 1, 1, 1]}
+#     )
+#
+#     print_prices(dates, vals_list, stock_name, buy_vals, sell_vals, ax1)
+#     print_tendencje(trend_text, ax2)
+#     print_rsi(dates, rsi_vals, buy_vals, sell_vals, ax3)
+#     print_portfel_vals(dates, portfolio_values, ax4)
+#
+#
+#     plt.tight_layout()
+#     plt.tight_layout(pad=2.0)
+#     plt.show()
 
 
 

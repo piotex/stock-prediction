@@ -48,6 +48,8 @@ def parse_stock_data(txt_data: str) -> list:
     lista = txt_data.split()
     ret = []
     for x in lista:
+        if x == "*":
+            continue
         a = x.split(',')
         ret.append({"Date":a[0], "Time":a[1], "Open":float(a[2]), "High":float(a[3]), "Low":float(a[4]), "Close":float(a[5])})
     return ret
