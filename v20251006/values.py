@@ -12,9 +12,10 @@ clean_all_folders = False
 # === DOWNLOAD DATA ======================================
 download_from_stooq = False
 download_from_bizradar_tendencies = False
-download_from_bizradar_indicators = True
+download_from_bizradar_indicators = False
 download_from_bankier_financial_data = False
-print_results = True
+print_stocks_worth_interest = True
+print_stock_data_results = True
 
 
 print_stock_prices          = True
