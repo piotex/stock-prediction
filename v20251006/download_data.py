@@ -148,7 +148,8 @@ def _join_dict(quarters, headers, row_elems):
         max_len = max(max_len, len(result[key]))
     for key in result:
         if len(result[key]) < max_len:
-            result[key] = ["-"] * max_len
+            padding = ["-"] * (max_len - len(result[key]))
+            result[key] = padding + result[key]
     return result
 
 def _get_indicators(index_name):
