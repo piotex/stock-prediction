@@ -14,8 +14,11 @@ download_from_stooq = False
 download_from_bizradar_tendencies = False
 download_from_bizradar_indicators = False
 download_from_bankier_financial_data = False
-print_stocks_worth_interest = True
-print_stock_data_results = True
+
+print_in_console_stocks_worth_interest = True
+print_chart_stock_data_results = False
+
+
 
 
 print_stock_prices          = True

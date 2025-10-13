@@ -20,14 +20,8 @@ def get_numeric_value(indicator_list, index=-1):
 
 def calculate_change(indicator_list, index=-1, change_type='r/r'):
     """
-    Oblicza zmianę procentową R/R (rok do roku, 4 kwartały wstecz)
-    lub Q/Q (kwartał do kwartału, 1 kwartał wstecz)
-    na podstawie czystych wartości liczbowych.
+    Oblicza zmianę procentową R/R (rok do roku, 4 kwartały wstecz) lub Q/Q (kwartał do kwartału, 1 kwartał wstecz) na podstawie czystych wartości liczbowych.
     """
-    if not indicator_list:
-        return None
-
-    step = 0
     if change_type == 'r/r':
         step = 4
     elif change_type == 'k/k':
@@ -35,12 +29,8 @@ def calculate_change(indicator_list, index=-1, change_type='r/r'):
     else:
         return None
 
-    if abs(index) < step:  # Nie ma wystarczającej liczby danych do porównania
-        return None
-
     current_value = get_numeric_value(indicator_list, index)
     previous_value = get_numeric_value(indicator_list, index - step)  # Cofnięcie o step kwartałów
-
     if current_value is None or previous_value is None or previous_value == 0:
         return None
 
@@ -52,13 +42,13 @@ def calculate_change(indicator_list, index=-1, change_type='r/r'):
 def is_stock_worth_interest(stock):
     # Kryteria Wyceny (Value Investing)
     PE_MAX = 25.0                   # Maksymalny akceptowalny wskaźnik C/Z
-    PB_MAX = 3.0                    # Maksymalny akceptowalny wskaźnik C/WK
-    PS_MAX = 2.0                    # Maksymalny akceptowalny wskaźnik C/P - Cena / Przychody ze Sprzedaży
+    PB_MAX = 10 #3.0                    # Maksymalny akceptowalny wskaźnik C/WK
+    PS_MAX = 10 #2.0                    # Maksymalny akceptowalny wskaźnik C/P - Cena / Przychody ze Sprzedaży
     EV_EBITDA_MAX = 10.0            # Maksymalny akceptowalny wskaźnik EV/EBITDA
 
     # Kryteria Wzrostu i Efektywności (Growth & Efficiency)
-    EPS_GROWTH_MIN_RR = 0.10        # Minimalny wymagany wzrost Zysku na Akcję r/r (10%)
-    BVS_DECREASE_MAX_RR = -0.05     # Maksymalny akceptowalny spadek Wartości Księgowej na Akcję r/r (-5%)
+    EPS_GROWTH_MIN_RR = 0 #0.10        # Minimalny wymagany wzrost Zysku na Akcję r/r (10%)
+    BVS_DECREASE_MAX_RR = -0.3 #-0.05     # Maksymalny akceptowalny spadek Wartości Księgowej na Akcję r/r (-5%)
     EBIT_PER_SHARE_MIN = 0.0        # Minimalna wartość Zysku Operacyjnego na Akcję (dodatni)
     # ====================================================
 

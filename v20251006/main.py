@@ -8,7 +8,9 @@ from v20251006.is_stock_worth_investment import is_stock_worth_interest
 from v20251006.plot_charts import print_stock_data
 from values import *
 import traceback
-
+from tabulate import tabulate
+import json
+from typing import Dict, Any # Dodaj te importy, jeśli ich brakuje
 
 
 if clean_all_folders:
@@ -99,44 +101,48 @@ for key, value in stocks_data.items():
     valid_data[key] = value
 
 
+# ================================== CALCULATE RECOMMENDED PURCHASE PRICE ===============================================
+for key, value in valid_data.items():
+    analysis_result = determine_recommended_purchase_price(value)
+    valid_data[key]["recommended_purchase_price"] = analysis_result['recommended_purchase_price']
+    valid_data[key]["latest_close_price"] = analysis_result['latest_close_price']
+
+
 # ================================== FIND STOCKS WORTH INVESTMENT ===============================================
 stocks_worth_interest = {}
 for index, data in valid_data.items():
+    # index = "MBK"
+    # data = valid_data[index]
     if not is_stock_worth_interest(data):
         continue
     stocks_worth_interest[index] = data
 
 
-# ================================== TMP ===============================================
-tmp_vals = []
-for key, value in valid_data.items():
-    tmp = determine_recommended_purchase_price(value)
-    recommended_purchase_price = tmp['recommended_purchase_price']
-    latest_close_price = tmp['latest_close_price']
-    valid_data[key]["recommended_purchase_price"] = recommended_purchase_price
-    tmp_vals.append([key, latest_close_price, recommended_purchase_price, (recommended_purchase_price-latest_close_price)/latest_close_price])
-
-sorted_ressss = sorted(tmp_vals, key=lambda x: x[-1], reverse=True)
-for item in sorted_ressss:
-    data = valid_data[item[0]]
-    print_stock_data(
-        stock_name=data["stock_name"],
-        dates=data["Date"],
-        prices=data["Close"],
-        tendencies=data["tendencies"],
-        indicators=data["indicators"],
-        quarterly_data=data["financial_data"],
-        recommended_purchase_price=data["recommended_purchase_price"],
-    )
-
-
 # ================================== PRINT STOCKS WORTH INVESTMENT ===============================================
-if print_stocks_worth_interest:
-    print(f"stocks_worth_interest (count): {len(stocks_worth_interest)}")
-    for index, data in stocks_worth_interest.items():
-        print(f"{stocks_worth_interest[index]["stock_name"]}")
+if print_in_console_stocks_worth_interest:
+    analysis_data_with_potential = []
 
-if print_stock_data_results:
+    for index, data in stocks_worth_interest.items():
+        rec_price = data.get("recommended_purchase_price", 0.0)
+        close_price = data.get("latest_close_price", data["Close"][-1] if data.get("Close") else 0.0)
+        potential_value = (rec_price / close_price - 1) * 100
+        row = [
+            data.get("stock_name", index),
+            f'{close_price:.2f}',
+            f'{rec_price:.2f}',
+            f'{potential_value:.1f}%',  # Wartość sformatowana do wyświetlenia
+            potential_value             # Wartość liczbowa do sortowania
+        ]
+        analysis_data_with_potential.append(row)
+
+    sorted_data = sorted(analysis_data_with_potential, key=lambda x: x[4], reverse=True)
+    analysis_results_list = [row[:-1] for row in sorted_data]
+
+    headers = ["Spółka", "Cena Rynkowa", "Zalecana Cena Zakupu", "Potencjał Zysku"]
+    print(tabulate(analysis_results_list, headers=headers, tablefmt="fancy_grid", numalign="right"))
+
+
+if print_chart_stock_data_results:
     for index, data in stocks_worth_interest.items():
         print_stock_data(
             stock_name                  = data["stock_name"],
@@ -155,9 +161,3 @@ if print_stock_data_results:
 
 
 
-
-
-
-
-
-#
