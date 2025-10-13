@@ -81,6 +81,7 @@ for index in indexes:
         print(f"{index} - Exception financial-data: {e}")
         traceback.print_exc()
 
+# ================================== CHECK IF DATA IS CORRECT ===============================================
 valid_data = {}
 for key, value in stocks_data.items():
     if "stock_name" not in value:
@@ -97,6 +98,16 @@ for key, value in stocks_data.items():
         continue
     valid_data[key] = value
 
+
+# ================================== FIND STOCKS WORTH INVESTMENT ===============================================
+stocks_worth_interest = {}
+for index, data in valid_data.items():
+    if not is_stock_worth_interest(data):
+        continue
+    stocks_worth_interest[index] = data
+
+
+# ================================== TMP ===============================================
 tmp_vals = []
 for key, value in valid_data.items():
     tmp = determine_recommended_purchase_price(value)
@@ -118,12 +129,8 @@ for item in sorted_ressss:
         recommended_purchase_price=data["recommended_purchase_price"],
     )
 
-stocks_worth_interest = {}
-for index, data in valid_data.items():
-    if not is_stock_worth_interest(data):
-        continue
-    stocks_worth_interest[index] = data
 
+# ================================== PRINT STOCKS WORTH INVESTMENT ===============================================
 if print_stocks_worth_interest:
     print(f"stocks_worth_interest (count): {len(stocks_worth_interest)}")
     for index, data in stocks_worth_interest.items():

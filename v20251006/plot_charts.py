@@ -64,14 +64,14 @@ def print_indicators_chart(financial_data, stock_name, ax1):
     light_gray = '#f0f0f0'
     colors = [
         "#DCDCDC",
+        "#79c9c9",
         "#D3D3D3",
+        "#708090",
         "#C0C0C0",
         "#A9A9A9",
+        "#778899",
         "#808080",
         "#696969",
-        "#778899",
-        "#708090",
-        "#2F4F4F"
     ]
 
     num_data_cols = num_cols - 1
