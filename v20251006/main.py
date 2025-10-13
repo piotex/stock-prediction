@@ -109,11 +109,16 @@ for key, value in valid_data.items():
 
 
 # ================================== FIND STOCKS WORTH INVESTMENT ===============================================
+calculated_indicators = []
 stocks_worth_interest = {}
 for index, data in valid_data.items():
-    # index = "MBK"
+    # index = "AST"
     # data = valid_data[index]
-    if not is_stock_worth_interest(data):
+
+    is_worth_interest = is_stock_worth_interest(data)
+    calculated_indicators.append(data["calculated_indicators"])
+
+    if not is_worth_interest:
         continue
     stocks_worth_interest[index] = data
 

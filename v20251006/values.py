@@ -16,7 +16,7 @@ download_from_bizradar_indicators = False
 download_from_bankier_financial_data = False
 
 print_in_console_stocks_worth_interest = True
-print_chart_stock_data_results = False
+print_chart_stock_data_results = True
 
 
 
