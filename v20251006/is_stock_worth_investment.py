@@ -1,65 +1,67 @@
 import math
+import re
 
-def get_eps_value(indicator_list, index=-1):
+
+def get_numeric_value(indicator_list, index=-1):
     if not indicator_list:
         return None
     try:
-        # Format: '0,62r/r +255.15%k/k -4.54%'
-        raw_value = str(indicator_list[index]).split('r/r')[0].replace(',', '.')
+        raw_string = str(indicator_list[index]).strip()
+        if raw_string == '-':
+            return None
+        raw_value = raw_string.split('~')[0].strip()
+        raw_value = raw_value.replace(' ', '').replace(',', '.')
         return float(raw_value)
     except (IndexError, ValueError):
         return None
-
-
-def get_change(indicator_list, index=-1, change_type='r/r'):
-    """
-    Ekstrahuje zmianę r/r (rok do roku) lub k/k (kwartał do kwartału)
-    dla wskaźników formatu 'wartość~branża...'. Zwraca None w przypadku braku.
-    """
-    if not indicator_list:
-        return None
-
-    try:
-        raw_string = str(indicator_list[index])
-
-        if change_type == 'r/r':
-            start_marker = 'r/r '
-        elif change_type == 'k/k':
-            start_marker = 'k/k '
-        else:
-            return None
-
-        if start_marker not in raw_string:
-            return None
-
-        # Wyszukiwanie zmiany dla Spółki, ignorując zmianę dla branży
-        parts = raw_string.split('~')
-
-        # Iteracja po częściach (poza samą wartością) w poszukiwaniu r/r lub k/k
-        for part in parts[1:]:
-            if start_marker in part:
-                # Wyszukaj i wyodrębnij wartość procentową
-                start_index = part.find(start_marker) + len(start_marker)
-                end_index = part.find('%', start_index)
-
-                if end_index != -1:
-                    change_value = part[start_index:end_index].replace(',', '.')
-                    return float(change_value) / 100
     except Exception:
         return None
 
-    return None
 
-def get_value(indicator_list, index=-1):
+def calculate_change(indicator_list, index=-1, change_type='r/r'):
+    """
+    Oblicza zmianę procentową R/R (rok do roku, 4 kwartały wstecz)
+    lub Q/Q (kwartał do kwartału, 1 kwartał wstecz)
+    na podstawie czystych wartości liczbowych.
+    """
     if not indicator_list:
         return None
-    try:
-        raw_value = str(indicator_list[index]).split('~')[0].replace(',', '.')
-        return float(raw_value)
-    except (IndexError, ValueError):
+
+    step = 0
+    if change_type == 'r/r':
+        step = 4
+    elif change_type == 'k/k':
+        step = 1
+    else:
         return None
 
+    if abs(index) < step:  # Nie ma wystarczającej liczby danych do porównania
+        return None
+
+    current_value = get_numeric_value(indicator_list, index)
+    previous_value = get_numeric_value(indicator_list, index - step)  # Cofnięcie o step kwartałów
+
+    if current_value is None or previous_value is None or previous_value == 0:
+        return None
+
+    # Obliczanie zmiany procentowej
+    change = (current_value - previous_value) / previous_value
+    return change
+
+
 def is_stock_worth_interest(stock):
+    # Kryteria Wyceny (Value Investing)
+    PE_MAX = 25.0                   # Maksymalny akceptowalny wskaźnik C/Z
+    PB_MAX = 3.0                    # Maksymalny akceptowalny wskaźnik C/WK
+    PS_MAX = 2.0                    # Maksymalny akceptowalny wskaźnik C/P - Cena / Przychody ze Sprzedaży
+    EV_EBITDA_MAX = 10.0            # Maksymalny akceptowalny wskaźnik EV/EBITDA
+
+    # Kryteria Wzrostu i Efektywności (Growth & Efficiency)
+    EPS_GROWTH_MIN_RR = 0.10        # Minimalny wymagany wzrost Zysku na Akcję r/r (10%)
+    BVS_DECREASE_MAX_RR = -0.05     # Maksymalny akceptowalny spadek Wartości Księgowej na Akcję r/r (-5%)
+    EBIT_PER_SHARE_MIN = 0.0        # Minimalna wartość Zysku Operacyjnego na Akcję (dodatni)
+    # ====================================================
+
     index = stock["index"]
     dates = stock["Date"]       # Time, Open, High, Low
     closes = stock["Close"]
@@ -100,59 +102,63 @@ def is_stock_worth_interest(stock):
     book_value_per_share = indicators.get('Wartość księgowa na akcję', [])
     earnings_per_share = indicators.get('Zysk na akcję', [])
     operating_profit_per_share = indicators.get('Zysk operacyjny na akcję', [])
+    ev_to_ebitda = indicators.get('EV / EBITDA', [])
 
-    if "POZYTYWNE" not in tendencies:
+
+
+    # 1. Analiza Trendu (Tendencies)
+    if "POZYTYWNE" not in stock["tendencies"]:
         return False
 
-    if not net_profit[-1] > net_profit[-2]:
+    # 2. Ciągły wzrost Zysku Netto Q/Q (FINANCIAL DATA)
+    net_profit_current = get_numeric_value(net_profit, -1)
+    net_profit_previous = get_numeric_value(net_profit, -2) # Q-1
+    if not net_profit_current > net_profit_previous:
+         return False
+
+    # 2b. Wzrost Zysku na Akcję (EPS) Q/Q (INDICATORS)
+    eps_current = get_numeric_value(earnings_per_share, -1)
+    eps_previous = get_numeric_value(earnings_per_share, -2) # Q-1
+    if not eps_current > eps_previous:
         return False
 
-    # 2. Ciągły wzrost zysku netto Q/Q (zachowane)
-    eps_current = get_eps_value(earnings_per_share, -1)
-    eps_previous = get_eps_value(earnings_per_share, -2)
+    # 3. Kryteria Wyceny (Value Investing)
 
-    # Podstawowy warunek dla zysku netto - wzrost q/q
-    if eps_current is None or eps_previous is None or not eps_current > eps_previous:
+    # P/E (Cena / Zysk)
+    pe_ratio = get_numeric_value(price_to_earnings, -1)
+    if pe_ratio is not None and pe_ratio > PE_MAX:
         return False
 
-    # 3. Dodatkowe warunki fundamentalne (na podstawie wskaźników)
-    ## Kryteria Wyceny (Value Investing)
-
-    # P/E (Cena / Zysk): Atrakcyjnie, jeśli poniżej progu (np. 15, ale to zależy od branży)
-    pe_ratio = get_value(price_to_earnings, -1)
-    if pe_ratio is not None and pe_ratio > 25.0:  # Wskaźnik PE za wysoki (arbitralny próg)
+    # P/BV (Cena / Wartość księgowa)
+    pb_ratio = get_numeric_value(price_to_book_value, -1)
+    if pb_ratio is not None and pb_ratio > PB_MAX:
         return False
 
-    # P/BV (Cena / Wartość księgowa): Atrakcyjnie, jeśli poniżej 3.0 lub blisko 1.0
-    pb_ratio = get_value(price_to_book_value, -1)
-    if pb_ratio is not None and pb_ratio > 3.0:  # Akcje drogie względem kapitału
-        return False
-
-    # P/S (Cena / Przychody): Poniżej 1.0 to świetnie, ale dla większości branż poniżej 3.0.
-    ps_ratio = get_value(price_to_sales_revenue, -1)
-    if ps_ratio is not None and ps_ratio > 2.0:  # Akcje drogie względem przychodów
+    # P/S (Cena / Przychody)
+    ps_ratio = get_numeric_value(price_to_sales_revenue, -1)
+    if ps_ratio is not None and ps_ratio > PS_MAX:
         return False
 
     ## Kryteria Wzrostu i Efektywności (Growth & Efficiency)
-    # 4. Wzrost Zysku na Akcję (EPS) r/r (rok do roku) - dynamiczny wzrost
-    eps_change_yr = get_change(earnings_per_share, -1, change_type='r/r')
-    if eps_change_yr is not None and eps_change_yr < 0.10:  # Wzrost EPS r/r poniżej 10%
+
+    # 4. Wzrost Zysku na Akcję (EPS) r/r (rok do roku)
+    eps_change_yr = calculate_change(earnings_per_share, -1, change_type='r/r')
+    if eps_change_yr is None or eps_change_yr < EPS_GROWTH_MIN_RR:
         return False
 
-    # 5. Stabilna Wartość Księgowa na Akcję (BVS) r/r - kapitał nie maleje
-    bvs_change_yr = get_change(book_value_per_share, -1, change_type='r/r')
-    if bvs_change_yr is not None and bvs_change_yr < -0.05:  # Spadek BVS r/r o więcej niż 5%
+    # 5. Stabilna Wartość Księgowa na Akcję (BVS) r/r
+    bvs_change_yr = calculate_change(book_value_per_share, -1, change_type='r/r')
+    if bvs_change_yr is None or bvs_change_yr < BVS_DECREASE_MAX_RR:
         return False
 
-    # 6. Rentowność: Dodatni i stabilny Zysk Operacyjny (EBIT)
-    ebit_current = get_eps_value(operating_profit_per_share, -1)  # uzywam eps_value do ekstrakcji
-    if ebit_current is not None and ebit_current <= 0:  # Zysk operacyjny na akcję musi być dodatni
+    # 6. Rentowność: Dodatni i stabilny Zysk Operacyjny (EBIT) - na akcję (EPS)
+    ebit_per_share_current = get_numeric_value(operating_profit_per_share, -1)
+    if ebit_per_share_current is None or ebit_per_share_current <= EBIT_PER_SHARE_MIN:
         return False
 
-    # 7. Relatywna Wycena (EV/EBITDA) - Wycena atrakcyjna względem gotówki operacyjnej
-    ev_ebitda = get_value(ev_to_ebitda, -1)
-    if ev_ebitda is not None and ev_ebitda > 10.0:  # Wskaźnik EV/EBITDA za wysoki
+    # 7. Relatywna Wycena (EV/EBITDA)
+    ev_ebitda = get_numeric_value(ev_to_ebitda, -1)
+    if ev_ebitda is not None and ev_ebitda > EV_EBITDA_MAX:
         return False
 
     return True
-
