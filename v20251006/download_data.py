@@ -165,6 +165,9 @@ def _get_indicators(index_name):
         quarters = _get_quarters(html_content)
         headers = _get_headers(html_content)
         row_elems = _get_row_elements(html_content)
+        row_elems = [x.split("r/r")[0] for x in row_elems]
+        row_elems = [x.split("k/k")[0] for x in row_elems]
+        row_elems = [x.split("~")[0] for x in row_elems]
         return _join_dict(quarters, headers, row_elems)
 
 def download_bizradar_indicators():
