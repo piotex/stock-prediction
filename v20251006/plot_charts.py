@@ -11,8 +11,18 @@ from datetime import datetime
 alpha_v = 0.4
 
 # ========================================================================
-def print_prices(dates, vals_list, stock_name, ax1):
+def print_prices(dates, vals_list, recommended_purchase_price, stock_name, ax1):
     ax1.plot(dates, vals_list, label=f'{stock_name}', color='blue')
+
+    label_text = f'Zalecana cena zakupu: {recommended_purchase_price:.2f} PLN'
+    ax1.axhline(
+        y=recommended_purchase_price,
+        color='green',
+        linestyle='--',
+        label=label_text,
+        linewidth=1.5  # Dodaj dla lepszej widoczności
+    )
+
     ax1.set_title(f'Kurs {stock_name}')
     ax1.set_ylabel('Cena [PLN]')
     ax1.grid(True)
@@ -188,6 +198,7 @@ def print_stock_data(stock_name: str,
                      tendencies: str,
                      indicators: Dict[str, List[Any]],
                      quarterly_data: Dict[str, List[Any]],
+                     recommended_purchase_price: float,
                      ):
 
     fig, ax_list = plt.subplots(
@@ -197,7 +208,7 @@ def print_stock_data(stock_name: str,
     )
 
     if print_stock_prices:
-        print_prices(dates, prices, stock_name, ax_list[0])
+        print_prices(dates, prices, recommended_purchase_price, stock_name, ax_list[0])
 
     # if print_rsi_chart:
     #     print_rsi(dates, prices, stock_name, ax_list[1])
