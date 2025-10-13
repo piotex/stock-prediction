@@ -3,6 +3,7 @@ import os
 from v20251006.download_data import download_stock_data, download_bizradar_tendencies, download_bankier_financial_data, \
     download_bizradar_indicators
 from v20251006.functions import get_stock_data, measure_execution_time
+from v20251006.get_price_when_to_buy import determine_recommended_purchase_price
 from v20251006.is_stock_worth_investment import is_stock_worth_interest
 from v20251006.plot_charts import print_stock_data
 from values import *
@@ -96,6 +97,26 @@ for key, value in stocks_data.items():
         continue
     valid_data[key] = value
 
+tmp_vals = []
+for key, value in valid_data.items():
+    tmp = determine_recommended_purchase_price(value)
+    recommended_purchase_price = tmp['recommended_purchase_price']
+    latest_close_price = tmp['latest_close_price']
+    valid_data[key]["recommended_purchase_price"] = recommended_purchase_price
+    tmp_vals.append([key, latest_close_price, recommended_purchase_price, (recommended_purchase_price-latest_close_price)/latest_close_price])
+
+sorted_ressss = sorted(tmp_vals, key=lambda x: x[-1], reverse=True)
+for item in sorted_ressss:
+    data = valid_data[item[0]]
+    print_stock_data(
+        stock_name=data["stock_name"],
+        dates=data["Date"],
+        prices=data["Close"],
+        tendencies=data["tendencies"],
+        indicators=data["indicators"],
+        quarterly_data=data["financial_data"],
+        recommended_purchase_price=data["recommended_purchase_price"],
+    )
 
 stocks_worth_interest = {}
 for index, data in valid_data.items():
@@ -111,12 +132,13 @@ if print_stocks_worth_interest:
 if print_stock_data_results:
     for index, data in stocks_worth_interest.items():
         print_stock_data(
-            stock_name      = data["stock_name"],
-            dates           = data["Date"],
-            prices          = data["Close"],
-            tendencies      = data["tendencies"],
-            indicators      = data["indicators"],
-            quarterly_data  = data["financial_data"],
+            stock_name                  = data["stock_name"],
+            dates                       = data["Date"],
+            prices                      = data["Close"],
+            tendencies                  = data["tendencies"],
+            indicators                  = data["indicators"],
+            quarterly_data              = data["financial_data"],
+            recommended_purchase_price  =data["recommended_purchase_price"],
         )
 
 
@@ -131,65 +153,4 @@ if print_stock_data_results:
 
 
 
-#
-#
-#
-# stock_idx_list = sorted([x.split('.')[0] for x in os.listdir("stocks")])
-# for i, stock_idx in enumerate(stock_idx_list):
-#     try:
-#         if read_from_bizradar_and_bankier:
-#             if os.path.exists(f"wyniki/{stock_idx}.txt"):
-#                 os.remove(f"wyniki/{stock_idx}.txt")
-#
-#             print(f" {i+1} / {len(stock_idx_list)}  -  {stock_idx}")
-#             stock_data = get_stock_data(stock_idx)          # {index, Date, Time, Open, High, Low, Close}
-#             stock_name, tendencies = get_stock_name_and_tendences(stock_data["index"])
-#
-#             quarterly_reports = {}
-#             try:
-#                 quarterly_reports = get_Skonsolidowany_quarterly_reports(stock_name)
-#             except:
-#                 quarterly_reports['Quarters'] = [""]
-#             if "202" not in quarterly_reports['Quarters'][-1]:
-#                 quarterly_reports = get_Jednostkowy_quarterly_reports(stock_name)
-#
-#
-#
-#             zysk_netto = quarterly_reports['Zysk (strata) netto (tys.)*']
-#             if not zysk_netto[-1] > zysk_netto[-2]:
-#                 continue
-#             if not "EBITDA (tys.)" in quarterly_reports:
-#                 ebitda = quarterly_reports['EBITDA (tys.)']
-#                 if not ebitda[-1] > ebitda[-2]:
-#                     continue
-#             if not "Przychody netto ze sprzedaży (tys.)" in quarterly_reports:
-#                 przychod_netto = quarterly_reports['Przychody netto ze sprzedaży (tys.)']
-#                 if not przychod_netto[-1] > przychod_netto[-2]:
-#                     continue
-#
-#             time.sleep(random.randint(1, 2))
-#             with open(f"wyniki/{stock_idx}.txt", "w") as file:
-#                 file.write(stock_name)
-#
-#     except Exception as e:
-#         print(f"=========================== ERROR dla: {stock_idx}")
-#         traceback.print_exc(file=sys.stdout)
-#         print(e)
-#         continue
-#
-#
-# if print_results:
-#     list_to_process = os.listdir("wyniki")
-#     for i, file in enumerate(list_to_process):
-#         stock_data = get_stock_data(file.split('.')[0])         # {index, Date, Time, Open, High, Low, Close}
-#         stock_name, tendencies = get_stock_name_and_tendences(stock_data["index"])
-#
-#         quarterly_reports = get_Skonsolidowany_quarterly_reports(stock_name)
-#         if "202" not in quarterly_reports['Quarters']:
-#             quarterly_reports = get_Jednostkowy_quarterly_reports(stock_name)
-#
-#         print(f" {i + 1} / {len(list_to_process)}  -  {stock_name}")
-#         print_stock_data(stock_name, stock_data["Date"], stock_data["Close"], tendencies, quarterly_reports)
-#
-#         os.remove(f"wyniki/{file}")
 #
